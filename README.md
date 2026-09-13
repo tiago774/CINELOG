@@ -1,71 +1,173 @@
-# CINELOG
+# CINELOG API
 
-Sistema de gerenciamento de catálogo de filmes e séries via terminal (CLI), desenvolvido em Python.
+API REST para catalogar filmes e séries, construída com **Flask** e persistência em **JSON**.
+
+O projeto começou como um CLI de terminal e foi refatorado para uma API REST.
+A lógica de negócio ficou isolada em `cinelog_core.py` (sem `print`, sem `input`),
+e a camada HTTP em `app.py` consome essas funções e expõe endpoints REST.
 
 ## Funcionalidades
 
 - Cadastrar filmes/séries com título, gênero, ano, status, nota, comentário e data de cadastro
 - Listar o catálogo com ordenação por título, ano, nota ou data de cadastro
 - Filtrar a listagem por status (todos, apenas assistidos, apenas pendentes)
-- Marcar/desmarcar títulos como assistidos
-- Avaliar títulos com nota de 0 a 10 (exibida também em formato de estrelas)
-- Adicionar ou atualizar comentários/resenhas por título
 - Buscar por gênero
 - Buscar por parte do título (busca parcial)
-- Excluir títulos do catálogo com confirmação
-- Calcular estatísticas: total de títulos, média das notas, total assistido, total pendente, gênero mais frequente e quantidade de títulos com comentário
-- Interface colorida no terminal (com códigos ANSI, sem dependências externas)
+- Marcar/desmarcar títulos como assistidos
+- Avaliar títulos com nota de 0 a 10
+- Adicionar ou atualizar comentários/resenhas por título
+- Excluir títulos do catálogo
+- Calcular estatísticas: total de títulos, média das notas, total assistido,
+  total pendente, gênero mais frequente e quantidade de títulos com comentário
 - Persistência automática em arquivo `catalogo.json`
 - Backup automático do catálogo anterior em `catalogo.json.bak`
-- Salvamento automático após cada alteração
 
 ## Requisitos
 
-- Python 3.7 ou superior
-- Nenhuma biblioteca externa necessária (usa apenas a biblioteca padrão)
+- Python 3.10 ou superior
+- Flask 3.0 ou superior
 
 ## Como executar
 
-1. Clone o repositório ou baixe os arquivos do projeto.
-2. No terminal, dentro da pasta do projeto, execute:
+### 1. Clonar o repositório
 
 ```bash
-python main.py
+git clone https://github.com/tiago774/CLI-CINELOG.git
+cd CLI-CINELOG
 ```
 
-Opcionalmente, é recomendado usar um ambiente virtual:
+### 2. Criar e ativar ambiente virtual
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate    # Linux/macOS
-.venv\Scripts\activate       # Windows
+source .venv/bin/activate     # Linux/macOS
+# .venv\Scripts\activate      # Windows
 ```
 
-## Menu de opções
+### 3. Instalar dependências
 
-```
-+------------------------------+
-|           CINELOG            |
-+------------------------------+
-| 1. Cadastrar filme/série     |
-| 2. Listar catálogo           |
-| 3. Marcar como assistido     |
-| 4. Avaliar (0 a 10)          |
-| 5. Buscar por gênero         |
-| 6. Excluir filme/série       |
-| 7. Calcular estatísticas     |
-| 8. Buscar por título         |
-| 9. Sair                      |
-+------------------------------+
+```bash
+pip install -r requirements.txt
 ```
 
-## Persistência de dados
+### 4. Rodar a API
 
-- O catálogo é salvo automaticamente em `catalogo.json` após cada alteração (cadastro, edição, avaliação, exclusão ou mudança de status).
-- Ao sair, o programa verifica se houve alterações antes de gravar novamente, evitando sobrescritas desnecessárias.
-- Ao iniciar, o programa tenta carregar o arquivo `catalogo.json`. Caso não exista ou esteja corrompido, inicia com o catálogo vazio.
-- Antes de cada gravação, é criado um backup do catálogo anterior em `catalogo.json.bak`.
-- O arquivo `catalogo.json` está listado no `.gitignore` e não é versionado.
+```bash
+python app.py
+```
+
+A API estará disponível em `http://localhost:5000`.
+
+## Endpoints
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `GET` | `/` | Informações da API |
+| `GET` | `/api/generos` | Lista os gêneros disponíveis |
+| `GET` | `/api/filmes` | Lista o catálogo (aceita filtros) |
+| `GET` | `/api/filmes/<titulo>` | Obtém um título específico |
+| `POST` | `/api/filmes` | Cadastra um novo título |
+| `PUT` | `/api/filmes/<titulo>` | Atualiza campos de um título |
+| `PATCH` | `/api/filmes/<titulo>/assistido` | Alterna o status "assistido" |
+| `DELETE` | `/api/filmes/<titulo>` | Remove um título |
+| `GET` | `/api/estatisticas` | Estatísticas do catálogo |
+
+### Filtros disponíveis em `GET /api/filmes`
+
+| Query param | Valores aceitos | Exemplo |
+|-------------|-----------------|---------|
+| `genero` | um dos gêneros válidos | `?genero=Ação` |
+| `assistido` | `true` / `false` | `?assistido=false` |
+| `busca` | texto livre (busca parcial) | `?busca=matrix` |
+| `ordenar` | `titulo`, `ano`, `nota`, `data`, `cadastro` | `?ordenar=nota` |
+
+## Exemplos de uso
+
+### Cadastrar um filme
+
+```bash
+curl -X POST http://localhost:5000/api/filmes \
+  -H "Content-Type: application/json" \
+  -d '{
+    "titulo": "Matrix",
+    "genero": "Ficção",
+    "ano": 1999,
+    "assistido": true,
+    "nota": 9.5,
+    "comentario": "Clássico absoluto"
+  }'
+```
+
+### Listar todos, ordenados por nota
+
+```bash
+curl -s "http://localhost:5000/api/filmes?ordenar=nota" | jq
+```
+
+### Filtrar por gênero e status
+
+```bash
+curl -s 'http://localhost:5000/api/filmes?genero=Ficção&assistido=true' | jq
+```
+
+> ⚠️ Use **aspas simples** ao redor da URL quando ela tiver acentos ou `&`.
+
+### Buscar por parte do título
+
+```bash
+curl -s "http://localhost:5000/api/filmes?busca=mat" | jq
+```
+
+### Obter um título específico
+
+```bash
+curl -s http://localhost:5000/api/filmes/Matrix | jq
+```
+
+### Atualizar a nota e o comentário
+
+```bash
+curl -X PUT http://localhost:5000/api/filmes/Matrix \
+  -H "Content-Type: application/json" \
+  -d '{"nota": 10, "comentario": "Melhor que eu lembrava"}'
+```
+
+### Alternar status "assistido"
+
+```bash
+curl -X PATCH http://localhost:5000/api/filmes/Matrix/assistido
+```
+
+### Excluir um título
+
+```bash
+curl -X DELETE http://localhost:5000/api/filmes/Matrix
+```
+
+### Ver estatísticas
+
+```bash
+curl -s http://localhost:5000/api/estatisticas | jq
+```
+
+## Códigos de erro
+
+| Status | Quando acontece |
+|--------|-----------------|
+| `400 Bad Request` | Payload inválido (nota fora de 0–10, gênero inexistente, ano inválido) |
+| `404 Not Found` | Título não cadastrado |
+| `409 Conflict` | Título já cadastrado |
+
+Todas as respostas de erro seguem o formato:
+
+```json
+{
+  "erro": "mensagem descritiva",
+  "tipo": "validacao"
+}
+```
+
+Os valores possíveis para `tipo` são: `validacao`, `nao_encontrado`, `conflito`, `rota` e `metodo`.
 
 ## Gêneros disponíveis
 
@@ -92,23 +194,34 @@ source .venv/bin/activate    # Linux/macOS
 ]
 ```
 
+## Persistência de dados
+
+- O catálogo é salvo automaticamente em `catalogo.json` após cada alteração
+  (cadastro, edição, avaliação, exclusão ou mudança de status).
+- Ao iniciar, a aplicação tenta carregar o arquivo `catalogo.json`. Caso não exista
+  ou esteja corrompido, inicia com o catálogo vazio.
+- Antes de cada gravação, é criado um backup do catálogo anterior em `catalogo.json.bak`.
+- Tanto `catalogo.json` quanto `catalogo.json.bak` estão no `.gitignore` e não
+  são versionados.
+
 ## Observações
 
 - Os títulos são armazenados sem duplicatas (comparação não diferencia maiúsculas/minúsculas).
 - A nota deve estar entre 0 e 10.
 - O ano deve estar entre 1900 e o ano atual + 5.
-- A limpeza de tela é automática em cada operação (compatível com Windows e Linux/macOS).
-- Interrupções com Ctrl+C são tratadas e o catálogo é salvo antes de sair.
-- Recomenda-se adicionar `catalogo.json.bak` ao `.gitignore` caso o backup não deva ser versionado.
+- Interrupções com `Ctrl+C` são tratadas e o catálogo é salvo antes de sair.
 
 ## Estrutura do projeto
 
 ```
 .
-├── main.py
+├── app.py                    # API Flask (rotas + tratamento de erros)
+├── cinelog_core.py           # Lógica de negócio pura (JSON + validação)
+├── requirements.txt          # Dependências (Flask)
+├── catalogo.exemplo.json     # Exemplo de estrutura do catálogo
 ├── README.md
 ├── .gitignore
-└── catalogo.json   (gerado em tempo de execução, não versionado)
+└── catalogo.json             # Gerado em tempo de execução, não versionado
 ```
 
 ## Licença
