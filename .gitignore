@@ -9,10 +9,15 @@ __pycache__/
 *.egg-info/
 .pytest_cache/
 
-# Dados locais do app (não versionar)
+# Dados locais do app
 catalogo.json
 catalogo.json.bak
 *.log
+
+# Cobertura
+.coverage
+.coverage.*
+htmlcov/
 
 # IDEs
 .vscode/
