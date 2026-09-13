@@ -23,8 +23,13 @@ class NaoEncontrado(Exception):
 class Conflito(Exception):
     """Título duplicado, etc → HTTP 409."""
 
+
 def carregar():
-    """Lê catalogo.json. Se ausente ou corrompido, devolve lista vazia."""
+    """Lê catalogo.json. Se ausente ou corrompido, devolve lista vazia.
+
+    Itens que não forem dicionários são descartados silenciosamente,
+    para tolerar arquivos editados à mão ou corrompidos parcialmente.
+    """
     if not ARQUIVO_JSON.exists():
         return []
 
@@ -36,6 +41,9 @@ def carregar():
 
     if not isinstance(data, list):
         return []
+
+    # Remove itens que não são dict (JSON corrompido ou editado à mão)
+    data = [item for item in data if isinstance(item, dict)]
 
     for item in data:
         if not isinstance(item.get("nota"), (int, float)):
@@ -66,7 +74,6 @@ def salvar(catalogo):
             json.dump(catalogo, f, ensure_ascii=False, indent=4)
     except OSError as e:
         raise RuntimeError(f"Erro ao salvar catálogo: {e}") from e
-
 
 
 def encontrar_por_titulo(catalogo, titulo):
@@ -120,6 +127,7 @@ def _validar_cadastro(dados):
         "comentario": comentario,
     }
 
+
 def listar(genero=None, assistido=None, ordenar="titulo", busca=None):
     itens = carregar()
 
@@ -161,7 +169,7 @@ def cadastrar(dados):
     if existente is not None:
         raise Conflito(f"'{payload['titulo']}' já está cadastrado.")
 
-    payload["data_cadastro"] = datetime.datetime.now().isoformat(timespec="seconds")
+    payload["data_cadastro"] = datetime.datetime.now().isoformat(timespec="microseconds")
     catalogo.append(payload)
     salvar(catalogo)
     return payload
