@@ -1,4 +1,19 @@
-catalogo.json
+# Ambiente virtual
 .venv/
+venv/
+env/
+
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Dados locais do app (não versionar)
+catalogo.json
+catalogo.json.bak
+*.log
+
+# IDEs
+.vscode/
+.idea/
