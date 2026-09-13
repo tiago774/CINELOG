@@ -1,1 +1,20 @@
-[]
+[
+    {
+        "titulo": "Matrix",
+        "genero": "Ficção",
+        "ano": 1999,
+        "assistido": true,
+        "nota": 9.5,
+        "comentario": "Clássico absoluto",
+        "data_cadastro": "2025-01-15T14:30:00.123456"
+    },
+    {
+        "titulo": "Cidade de Deus",
+        "genero": "Drama",
+        "ano": 2002,
+        "assistido": false,
+        "nota": 0.0,
+        "comentario": "",
+        "data_cadastro": "2025-01-16T09:15:00.456789"
+    }
+]

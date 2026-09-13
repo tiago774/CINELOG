@@ -1,3 +1,7 @@
+![tests](https://github.com/tiago774/CLI-CINELOG/actions/workflows/tests.yml/badge.svg)
+![coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+![python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)
+
 # CINELOG API
 
 API REST para catalogar filmes e séries, construída com **Flask** e persistência em **JSON**.
@@ -224,6 +228,53 @@ Os valores possíveis para `tipo` são: `validacao`, `nao_encontrado`, `conflito
 └── catalogo.json             # Gerado em tempo de execução, não versionado
 ```
 
+## Testes
+
+O projeto tem **97 testes** com **100% de cobertura** (linhas e branches).
+
+```bash
+make test        # roda os testes
+make cov         # testes + cobertura no terminal
+make cov-html    # gera relatório HTML em htmlcov/
+make cov-fail    # falha se cobertura < 100%
+make ci          # roda tudo que o CI roda
+make clean       # limpa artefatos
+```
+
+## Sem Makefile:
+bash
+
+pytest
+pytest --cov=app --cov=cinelog_core --cov-branch --cov-report=term-missing
+
+### Estrutura dos testes
+
+```
+tests/
+├── conftest.py               # Fixtures compartilhadas
+├── test_api.py               # Endpoints HTTP básicos
+├── test_api_extras.py        # Filtros, PUT, PATCH, erros
+├── test_core.py              # Lógica de negócio
+├── test_core_extras.py       # Casos-limite e validações
+└── test_persistencia.py      # Carregar/salvar/backup
+```
+
+## Sequência de comandos
+
+### Passo 1 — Verificar tudo localmente
+
+```bash
+# Garantir que está no venv
+source .venv/bin/activate
+```
+
+# Rodar o que o CI vai rodar
+make ci
+
+Esperado: 97 passed + Total coverage: 100.00%.
+
 ## Licença
 
 Projeto livre para uso e estudo.
+
+
